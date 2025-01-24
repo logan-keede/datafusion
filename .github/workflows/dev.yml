@@ -18,9 +18,11 @@
 name: Dev
 on: 
   pull_request:
-    - "**/*.md"
-  paths:
-    - "**/*.md"
+    paths:
+      - "**/*.md"
+  push:
+      paths:
+        - "**/*.md"
 
 concurrency:
   group: ${{ github.repository }}-${{ github.head_ref || github.sha }}-${{ github.workflow }}
