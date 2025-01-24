@@ -16,7 +16,11 @@
 # under the License.
 
 name: Dev
-on: [push, pull_request]
+on: 
+  pull_request:
+    - "**/*.md"
+  paths:
+    - "**/*.md"
 
 concurrency:
   group: ${{ github.repository }}-${{ github.head_ref || github.sha }}-${{ github.workflow }}
@@ -33,9 +37,6 @@ jobs:
   prettier:
     name: Use prettier to check formatting of documents
     runs-on: ubuntu-latest
-    on:
-      paths:
-        - "**/*.md"
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
