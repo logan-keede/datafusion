@@ -33,6 +33,9 @@ jobs:
   prettier:
     name: Use prettier to check formatting of documents
     runs-on: ubuntu-latest
+    on:
+      paths:
+        - "**/*.md"
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
