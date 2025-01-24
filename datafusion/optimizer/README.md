@@ -17,6 +17,9 @@
   under the License.
 -->
 
-Please see [Query Optimizer] in the Library User Guide
+Please see [Query Optimizer][Query Optimizer] in the Library User Guide
+
+
+
 
 [query optimizer]: https://datafusion.apache.org/library-user-guide/query-optimizer.html
