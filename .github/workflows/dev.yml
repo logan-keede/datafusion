@@ -16,6 +16,12 @@
 # under the License.
 
 name: Dev
+
+concurrency:
+  group: ${{ github.repository }}-${{ github.head_ref || github.sha }}-${{ github.workflow }}
+  cancel-in-progress: true
+
+
 on: 
   pull_request:
     paths:
@@ -23,10 +29,6 @@ on:
   push:
       paths:
         - "**/*.md"
-
-concurrency:
-  group: ${{ github.repository }}-${{ github.head_ref || github.sha }}-${{ github.workflow }}
-  cancel-in-progress: true
 
 jobs:
   license-header-check:
