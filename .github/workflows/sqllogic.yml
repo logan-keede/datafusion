@@ -26,7 +26,7 @@ on:
     workflows: ["Linux"]
     types: [requested]
     branches:
-      - 'releases/**'
+      - '**'
 
   # manual trigger
   # https://docs.github.com/en/actions/managing-workflow-runs/manually-running-a-workflow
