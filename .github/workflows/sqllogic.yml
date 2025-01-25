@@ -25,9 +25,10 @@ on:
   workflow_run:
     workflows: ["Linux Build"] 
     types:
-      - completed
+      - requested
     push:
     pull_request:
+
   # manual trigger
   # https://docs.github.com/en/actions/managing-workflow-runs/manually-running-a-workflow
   workflow_dispatch:
