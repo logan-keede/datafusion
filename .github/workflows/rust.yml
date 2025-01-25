@@ -23,7 +23,7 @@ concurrency:
 
 on:
   workflow_run:
-    workflows: ["Linux Build"]  # The name of the first workflow
+    workflows: ["Linux"]  # The name of the first workflow
     types:
       - completed
   # manual trigger
