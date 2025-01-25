@@ -15,7 +15,7 @@
 # specific language governing permissions and limitations
 # under the License.
 
-name: Rust
+name: SQL Logic Test
 
 concurrency:
   group: ${{ github.repository }}-${{ github.head_ref || github.sha }}-${{ github.workflow }}
@@ -42,7 +42,7 @@ jobs:
   # verify that the benchmark queries return the correct results
   verify-benchmark-results:
     name: verify benchmark results (amd64)
-    needs: linux-build-lib
+    # needs: linux-build-lib
     runs-on: ubuntu-latest
     container:
       image: amd64/rust
@@ -75,7 +75,7 @@ jobs:
 
   sqllogictest-postgres:
     name: "Run sqllogictest with Postgres runner"
-    needs: linux-build-lib
+    # needs: linux-build-lib
     runs-on: ubuntu-latest
     container:
       image: amd64/rust
