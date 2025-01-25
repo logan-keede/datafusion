@@ -22,6 +22,10 @@ concurrency:
   cancel-in-progress: true
 
 on:
+  workflow_run:
+    workflows: ["Linux Build"] 
+    types:
+      - completed
   push:
     paths-ignore:
       - "docs/**"
