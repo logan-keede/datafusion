@@ -588,14 +588,16 @@ fn to_timestamp_impl<T: ArrowTimestampType + ScalarType<i64>>(
         Nanosecond => 1,
     };
 
+    let args = sanitize_timestamp_format(args)?;
+
     match args.len() {
         1 => handle::<T, _, T>(
-            args,
+            &args,
             |s| string_to_timestamp_nanos_shim(s).map(|n| n / factor),
             name,
         ),
         n if n >= 2 => handle_multiple::<T, _, T, _>(
-            args,
+            &args,
             string_to_timestamp_nanos_formatted,
             |n| n / factor,
             name,

@@ -41,6 +41,40 @@ pub(crate) fn string_to_timestamp_nanos_shim(s: &str) -> Result<i64> {
     string_to_timestamp_nanos(s).map_err(|e| e.into())
 }
 
+/// Filters out invalid timestamp formats and returns a sanitized slice.
+pub(crate) fn sanitize_timestamp_format(
+    args: &[ColumnarValue],
+) -> Result<Vec<ColumnarValue>> {
+    if args.len() < 2 {
+        return Ok(args.to_vec());
+    }
+
+    let mut filtered_args = Vec::with_capacity(args.len());
+    filtered_args.push(args[0].clone()); // Keep the first element unchanged, as that is timestamp
+
+    // Filter valid formats
+    for arg in &args[1..] {
+        match arg {
+            ColumnarValue::Scalar(format) => {
+                if StrftimeItems::new(&format.to_string()).parse().is_ok() {
+                    filtered_args.push(arg.clone());
+                } else {
+                    eprintln!(
+                        "Warning: `{}` is not a valid timestamp format string",
+                        format
+                    );
+                }
+            }
+            _ => {
+                filtered_args.push(arg.clone());
+                // I dont think we expect anything other than ColumnarValue::Scalar here
+            }
+        }
+    }
+
+    Ok(filtered_args)
+}
+
 /// Checks that all the arguments from the second are of type [Utf8], [LargeUtf8] or [Utf8View]
 ///
 /// [Utf8]: DataType::Utf8
