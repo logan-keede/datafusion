@@ -41,6 +41,7 @@ pub mod parser;
 pub mod planner;
 mod query;
 mod relation;
+pub mod resolve;
 mod select;
 mod set_expr;
 mod stack;
