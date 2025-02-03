@@ -24,9 +24,14 @@
 pub mod memory;
 #[deprecated(
     since = "46.0.0",
+    note = "use datafusion_sql::resolve::resolve_table_references"
+)]
+pub use datafusion_sql::resolve::resolve_table_references;
+#[deprecated(
+    since = "46.0.0",
     note = "use datafusion_common::{ResolvedTableReference, TableReference}"
 )]
-pub use datafusion_sql::{resolve::*, ResolvedTableReference, TableReference};
+pub use datafusion_sql::{ResolvedTableReference, TableReference};
 pub use memory::{
     MemoryCatalogProvider, MemoryCatalogProviderList, MemorySchemaProvider,
 };

@@ -8,17 +8,17 @@ use sqlparser::ast::*;
 
 // following constants are used in `resolve_table_references`
 // and should be same as `datafusion/catalog/src/information_schema.rs`
-pub const INFORMATION_SCHEMA: &str = "information_schema";
-pub(crate) const TABLES: &str = "tables";
-pub(crate) const VIEWS: &str = "views";
-pub(crate) const COLUMNS: &str = "columns";
-pub(crate) const DF_SETTINGS: &str = "df_settings";
-pub(crate) const SCHEMATA: &str = "schemata";
-pub(crate) const ROUTINES: &str = "routines";
-pub(crate) const PARAMETERS: &str = "parameters";
+const INFORMATION_SCHEMA: &str = "information_schema";
+const TABLES: &str = "tables";
+const VIEWS: &str = "views";
+const COLUMNS: &str = "columns";
+const DF_SETTINGS: &str = "df_settings";
+const SCHEMATA: &str = "schemata";
+const ROUTINES: &str = "routines";
+const PARAMETERS: &str = "parameters";
 
 /// All information schema tables
-pub const INFORMATION_SCHEMA_TABLES: &[&str] = &[
+const INFORMATION_SCHEMA_TABLES: &[&str] = &[
     TABLES,
     VIEWS,
     COLUMNS,
