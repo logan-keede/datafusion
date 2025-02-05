@@ -39,8 +39,8 @@ use std::task::Poll;
 
 use crate::arrow::datatypes::SchemaRef;
 use crate::datasource::physical_plan::{FileScanConfig, FileSinkConfig};
-use crate::error::Result;
-use crate::physical_plan::{ExecutionPlan, Statistics};
+use datafusion_common::error::Result;
+use datafusion_physical_plan::{ExecutionPlan, Statistics};
 
 use arrow_array::RecordBatch;
 use arrow_schema::{ArrowError, DataType, Field, FieldRef, Schema};

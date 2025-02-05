@@ -160,6 +160,7 @@ impl FileFormat for AvroFormat {
 mod tests {
     use super::*;
     use crate::datasource::file_format::test_util::scan_format;
+    use crate::execution::SessionState;
     use crate::physical_plan::collect;
     use crate::prelude::{SessionConfig, SessionContext};
     use arrow::array::{as_string_array, Array};
