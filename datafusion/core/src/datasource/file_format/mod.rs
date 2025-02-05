@@ -45,6 +45,7 @@ use crate::physical_plan::{ExecutionPlan, Statistics};
 
 use arrow_array::RecordBatch;
 use arrow_schema::{ArrowError, DataType, Field, FieldRef, Schema};
+use datafusion_catalog::Session;
 use datafusion_common::file_options::file_type::FileType;
 use datafusion_common::{internal_err, not_impl_err, GetExt};
 use datafusion_expr::Expr;
@@ -103,7 +104,7 @@ pub trait FileFormat: Send + Sync + Debug {
     /// the files have schemas that cannot be merged.
     async fn infer_schema(
         &self,
-        state: &SessionState,
+        state: &dyn Session,
         store: &Arc<dyn ObjectStore>,
         objects: &[ObjectMeta],
     ) -> Result<SchemaRef>;
@@ -117,7 +118,7 @@ pub trait FileFormat: Send + Sync + Debug {
     /// TODO: should the file source return statistics for only columns referred to in the table schema?
     async fn infer_stats(
         &self,
-        state: &SessionState,
+        state: &dyn Session,
         store: &Arc<dyn ObjectStore>,
         table_schema: SchemaRef,
         object: &ObjectMeta,

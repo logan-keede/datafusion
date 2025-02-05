@@ -48,6 +48,7 @@ use crate::physical_plan::{
 };
 
 use arrow::compute::sum;
+use datafusion_catalog::Session;
 use datafusion_common::config::{ConfigField, ConfigFileType, TableParquetOptions};
 use datafusion_common::parsers::CompressionTypeVariant;
 use datafusion_common::stats::Precision;
@@ -325,7 +326,7 @@ impl FileFormat for ParquetFormat {
 
     async fn infer_schema(
         &self,
-        state: &SessionState,
+        state: &dyn Session,
         store: &Arc<dyn ObjectStore>,
         objects: &[ObjectMeta],
     ) -> Result<SchemaRef> {
@@ -378,7 +379,7 @@ impl FileFormat for ParquetFormat {
 
     async fn infer_stats(
         &self,
-        _state: &SessionState,
+        _state: &dyn Session,
         store: &Arc<dyn ObjectStore>,
         table_schema: SchemaRef,
         object: &ObjectMeta,

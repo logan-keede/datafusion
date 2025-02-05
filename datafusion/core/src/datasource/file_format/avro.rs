@@ -25,6 +25,7 @@ use std::sync::Arc;
 use arrow::datatypes::Schema;
 use arrow::datatypes::SchemaRef;
 use async_trait::async_trait;
+use datafusion_catalog::Session;
 use datafusion_common::internal_err;
 use datafusion_common::parsers::CompressionTypeVariant;
 use datafusion_common::GetExt;
@@ -111,7 +112,7 @@ impl FileFormat for AvroFormat {
 
     async fn infer_schema(
         &self,
-        _state: &SessionState,
+        _state: &dyn Session,
         store: &Arc<dyn ObjectStore>,
         objects: &[ObjectMeta],
     ) -> Result<SchemaRef> {
@@ -136,7 +137,7 @@ impl FileFormat for AvroFormat {
 
     async fn infer_stats(
         &self,
-        _state: &SessionState,
+        _state: &dyn Session,
         _store: &Arc<dyn ObjectStore>,
         table_schema: SchemaRef,
         _object: &ObjectMeta,

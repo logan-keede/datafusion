@@ -21,7 +21,7 @@ use arrow::{
     array::{AsArray, RecordBatch, StringArray, UInt8Array},
     datatypes::{DataType, Field, Schema, SchemaRef, UInt64Type},
 };
-use datafusion::common::{GetExt, Statistics};
+use datafusion::{catalog::Session, common::{GetExt, Statistics}};
 use datafusion::execution::session_state::SessionStateBuilder;
 use datafusion::physical_expr::LexRequirement;
 use datafusion::physical_expr::PhysicalExpr;
@@ -94,7 +94,7 @@ impl FileFormat for TSVFileFormat {
 
     async fn infer_stats(
         &self,
-        state: &SessionState,
+        state: &dyn Session,
         store: &Arc<dyn ObjectStore>,
         table_schema: SchemaRef,
         object: &ObjectMeta,

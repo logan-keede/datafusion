@@ -43,6 +43,7 @@ use arrow::ipc::reader::FileReader;
 use arrow::ipc::writer::IpcWriteOptions;
 use arrow::ipc::{root_as_message, CompressionType};
 use arrow_schema::{ArrowError, Schema, SchemaRef};
+use datafusion_catalog::Session;
 use datafusion_common::parsers::CompressionTypeVariant;
 use datafusion_common::{
     not_impl_err, DataFusionError, GetExt, Statistics, DEFAULT_ARROW_EXTENSION,
@@ -134,7 +135,7 @@ impl FileFormat for ArrowFormat {
 
     async fn infer_schema(
         &self,
-        _state: &SessionState,
+        _state: &dyn Session,
         store: &Arc<dyn ObjectStore>,
         objects: &[ObjectMeta],
     ) -> Result<SchemaRef> {
@@ -158,7 +159,7 @@ impl FileFormat for ArrowFormat {
 
     async fn infer_stats(
         &self,
-        _state: &SessionState,
+        _state: &dyn Session,
         _store: &Arc<dyn ObjectStore>,
         table_schema: SchemaRef,
         _object: &ObjectMeta,

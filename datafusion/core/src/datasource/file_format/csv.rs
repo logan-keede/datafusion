@@ -44,6 +44,7 @@ use arrow::array::RecordBatch;
 use arrow::csv::WriterBuilder;
 use arrow::datatypes::{DataType, Field, Fields, Schema, SchemaRef};
 use arrow_schema::ArrowError;
+use datafusion_catalog::Session;
 use datafusion_common::config::{ConfigField, ConfigFileType, CsvOptions};
 use datafusion_common::file_options::csv_writer::CsvWriterOptions;
 use datafusion_common::{
@@ -364,7 +365,7 @@ impl FileFormat for CsvFormat {
 
     async fn infer_schema(
         &self,
-        state: &SessionState,
+        state: &dyn Session,
         store: &Arc<dyn ObjectStore>,
         objects: &[ObjectMeta],
     ) -> Result<SchemaRef> {
@@ -399,7 +400,7 @@ impl FileFormat for CsvFormat {
 
     async fn infer_stats(
         &self,
-        _state: &SessionState,
+        _state: &dyn Session,
         _store: &Arc<dyn ObjectStore>,
         table_schema: SchemaRef,
         _object: &ObjectMeta,
@@ -480,7 +481,7 @@ impl CsvFormat {
     /// number of lines that were read
     async fn infer_schema_from_stream(
         &self,
-        state: &SessionState,
+        state: &dyn Session,
         mut records_to_read: usize,
         stream: impl Stream<Item = Result<Bytes>>,
     ) -> Result<(Schema, usize)> {

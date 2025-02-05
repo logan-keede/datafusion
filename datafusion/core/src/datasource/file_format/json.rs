@@ -47,6 +47,7 @@ use arrow::json;
 use arrow::json::reader::{infer_json_schema_from_iterator, ValueIter};
 use arrow_array::RecordBatch;
 use arrow_schema::ArrowError;
+use datafusion_catalog::Session;
 use datafusion_common::config::{ConfigField, ConfigFileType, JsonOptions};
 use datafusion_common::file_options::json_writer::JsonWriterOptions;
 use datafusion_common::{not_impl_err, GetExt, DEFAULT_JSON_EXTENSION};
@@ -187,7 +188,7 @@ impl FileFormat for JsonFormat {
 
     async fn infer_schema(
         &self,
-        _state: &SessionState,
+        _state: &dyn Session,
         store: &Arc<dyn ObjectStore>,
         objects: &[ObjectMeta],
     ) -> Result<SchemaRef> {
@@ -235,7 +236,7 @@ impl FileFormat for JsonFormat {
 
     async fn infer_stats(
         &self,
-        _state: &SessionState,
+        _state: &dyn Session,
         _store: &Arc<dyn ObjectStore>,
         table_schema: SchemaRef,
         _object: &ObjectMeta,
