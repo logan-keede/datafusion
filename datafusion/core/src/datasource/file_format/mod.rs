@@ -40,7 +40,6 @@ use std::task::Poll;
 use crate::arrow::datatypes::SchemaRef;
 use crate::datasource::physical_plan::{FileScanConfig, FileSinkConfig};
 use crate::error::Result;
-use crate::execution::context::SessionState;
 use crate::physical_plan::{ExecutionPlan, Statistics};
 
 use arrow_array::RecordBatch;
@@ -66,7 +65,7 @@ pub trait FileFormatFactory: Sync + Send + GetExt + Debug {
     /// Initialize a [FileFormat] and configure based on session and command level options
     fn create(
         &self,
-        state: &SessionState,
+        state: &dyn Session,
         format_options: &HashMap<String, String>,
     ) -> Result<Arc<dyn FileFormat>>;
 
@@ -128,7 +127,7 @@ pub trait FileFormat: Send + Sync + Debug {
     /// according to this file format.
     async fn create_physical_plan(
         &self,
-        state: &SessionState,
+        state: &dyn Session,
         conf: FileScanConfig,
         filters: Option<&Arc<dyn PhysicalExpr>>,
     ) -> Result<Arc<dyn ExecutionPlan>>;
@@ -138,7 +137,7 @@ pub trait FileFormat: Send + Sync + Debug {
     async fn create_writer_physical_plan(
         &self,
         _input: Arc<dyn ExecutionPlan>,
-        _state: &SessionState,
+        _state: &dyn Session,
         _conf: FileSinkConfig,
         _order_requirements: Option<LexRequirement>,
     ) -> Result<Arc<dyn ExecutionPlan>> {
@@ -566,7 +565,7 @@ pub(crate) mod test_util {
     };
 
     pub async fn scan_format(
-        state: &SessionState,
+        state: &dyn Session,
         format: &dyn FileFormat,
         store_root: &str,
         file_name: &str,
