@@ -1,5 +1,4 @@
 trap 'git checkout main' EXIT #checkout to main on exit
-
 ARG1=$1
 echo $ARG1
 
@@ -21,8 +20,10 @@ for i in {3..5}; do
     echo "running benchmark on  $((major_version-i)).0.0"
     git fetch upstream $((major_version-i)).0.0
     git checkout $((major_version-i)).0.0
+    export RESULTS_DIR = "results/heads_$((major_version-i)).0.0"
     ./bench.sh run $ARG1
-    mv results/HEAD/* results/heads_$((major_version-i)).0.0
+    # mv results/HEAD/* results/heads_$((major_version-i)).0.0/
+
 done
 }
 
