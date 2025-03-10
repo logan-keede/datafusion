@@ -17,11 +17,12 @@ echo "current major version: $major_version"
 ./bench.sh run $ARG1
 
 # run for last 5 major releases
-for i in {1..5}; do
+for i in {3..5}; do
     echo "running benchmark on  $((major_version-i)).0.0"
     git fetch upstream $((major_version-i)).0.0
     git checkout $((major_version-i)).0.0
     ./bench.sh run $ARG1
+    cp results/HEAD/* results/heads_$((major_version-i)).0.0
 done
 }
 
