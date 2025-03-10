@@ -22,7 +22,7 @@ for i in {3..5}; do
     git fetch upstream $((major_version-i)).0.0
     git checkout $((major_version-i)).0.0
     ./bench.sh run $ARG1
-    cp results/HEAD/* results/heads_$((major_version-i)).0.0
+    mv results/HEAD/* results/heads_$((major_version-i)).0.0
 done
 }
 
