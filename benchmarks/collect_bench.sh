@@ -13,7 +13,7 @@ major_version=$(echo "$output" | grep -oE '[0-9]+' | head -n1)
 
 # run for current main
 echo "current major version: $major_version"  
-./bench.sh run $ARG1
+# ./bench.sh run $ARG1
 
 # run for last 5 major releases
 for i in {3..5}; do
