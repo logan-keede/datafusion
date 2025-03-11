@@ -14,7 +14,7 @@ major_version=$(echo "$output" | grep -oE '[0-9]+' | head -n1)
 # run for current main
 echo "current major version: $major_version"  
 export RESULTS_DIR="results/main"
-./bench.sh run $ARG1
+# ./bench.sh run $ARG1
 
 # run for last 5 major releases
 for i in {1..5}; do
@@ -23,8 +23,6 @@ for i in {1..5}; do
     git checkout $((major_version-i)).0.0
     export RESULTS_DIR="results/$((major_version-i)).0.0"
     ./bench.sh run $ARG1
-    # mv results/HEAD/* results/heads_$((major_version-i)).0.0/
-
 done
 }
 
