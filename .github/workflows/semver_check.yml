@@ -42,5 +42,5 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
       - name: Check semver
-        uses: logan-keede/cargo-semver-checks-action@v2
+        uses: logan-keede/cargo-semver-check-explore@v2
     
