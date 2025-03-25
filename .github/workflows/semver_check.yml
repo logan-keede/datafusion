@@ -34,7 +34,7 @@ on:
       - "**.md"
       - ".github/ISSUE_TEMPLATE/**"
       - ".github/pull_request_template.md"
-      
+
 jobs:
   semver-checks:
     runs-on: ubuntu-latest
@@ -42,4 +42,4 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
       - name: Check semver
-        uses: logan-keede/cargo-semver-checks-action@v2
+        uses: obi1kenobi/cargo-semver-checks-action@v2
