@@ -15,7 +15,7 @@
 # specific language governing permissions and limitations
 # under the License.
 
-name: Rust
+name: API Changes
 
 concurrency:
   group: ${{ github.repository }}-${{ github.head_ref || github.sha }}-${{ github.workflow }}
@@ -42,4 +42,4 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
       - name: Check semver
-        uses: obi1kenobi/cargo-semver-checks-action@v2
+        uses: logan-keede/cargo-semver-checks-action@v2
