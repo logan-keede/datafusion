@@ -30,10 +30,13 @@ use crate::execution::context::SessionState;
 use arrow::datatypes::{DataType, SchemaRef};
 use datafusion_common::{arrow_datafusion_err, plan_err, DataFusionError, ToDFSchema};
 use datafusion_common::{config_datafusion_err, Result};
+use datafusion_datasource::file_format;
+use datafusion_datasource::session_file_handler::SessionFileHandler;
 use datafusion_expr::CreateExternalTable;
 
 use async_trait::async_trait;
-use datafusion_catalog::Session;
+use datafusion_session::Session;
+// use datafusion_catalog::Session;
 
 /// A `TableProviderFactory` capable of creating new `ListingTable`s
 #[derive(Debug, Default)]
@@ -46,16 +49,17 @@ impl ListingTableFactory {
     }
 }
 
+
 #[async_trait]
 impl TableProviderFactory for ListingTableFactory {
     async fn create(
         &self,
-        state: &dyn Session,
+        state: &dyn SessionFileHandler,
         cmd: &CreateExternalTable,
     ) -> Result<Arc<dyn TableProvider>> {
         // TODO (https://github.com/apache/datafusion/issues/11600) remove downcast_ref from here. Should file format factory be an extension to session state?
-        let session_state = state.as_any().downcast_ref::<SessionState>().unwrap();
-        let file_format = session_state
+        let session_state: &dyn Session = state;
+        let file_format = state
             .get_file_format_factory(cmd.file_type.as_str())
             .ok_or(config_datafusion_err!(
                 "Unable to create table with format {}! Could not find FileFormat.",

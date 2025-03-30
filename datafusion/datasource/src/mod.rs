@@ -42,6 +42,7 @@ pub mod schema_adapter;
 pub mod sink;
 pub mod source;
 mod statistics;
+pub mod session_file_handler;
 
 #[cfg(test)]
 mod test_util;

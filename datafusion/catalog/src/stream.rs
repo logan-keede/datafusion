@@ -30,6 +30,7 @@ use arrow::array::{RecordBatch, RecordBatchReader, RecordBatchWriter};
 use arrow::datatypes::SchemaRef;
 use datafusion_common::{config_err, plan_err, Constraints, DataFusionError, Result};
 use datafusion_common_runtime::SpawnedTask;
+use datafusion_datasource::session_file_handler::SessionFileHandler;
 use datafusion_datasource::sink::{DataSink, DataSinkExec};
 use datafusion_execution::{SendableRecordBatchStream, TaskContext};
 use datafusion_expr::dml::InsertOp;
@@ -50,7 +51,7 @@ pub struct StreamTableFactory {}
 impl TableProviderFactory for StreamTableFactory {
     async fn create(
         &self,
-        state: &dyn Session,
+        state: &dyn SessionFileHandler,
         cmd: &CreateExternalTable,
     ) -> Result<Arc<dyn TableProvider>> {
         let schema: SchemaRef = Arc::new(cmd.schema.as_ref().into());

@@ -71,6 +71,7 @@ use datafusion_physical_plan::ExecutionPlan;
 use datafusion_session::Session;
 use datafusion_sql::parser::{DFParserBuilder, Statement};
 use datafusion_sql::planner::{ContextProvider, ParserOptions, PlannerContext, SqlToRel};
+use datafusion_datasource::session_file_handler::SessionFileHandler;
 
 use async_trait::async_trait;
 use chrono::{DateTime, Utc};
@@ -273,6 +274,11 @@ impl Session for SessionState {
     }
 }
 
+impl SessionFileHandler for SessionState {
+    fn get_file_format_factory(&self,ext: &str,) -> Option<Arc<dyn FileFormatFactory> > {
+        self.get_file_format_factory(ext)
+    }
+}
 impl SessionState {
     /// Returns new [`SessionState`] using the provided
     /// [`SessionConfig`] and [`RuntimeEnv`].

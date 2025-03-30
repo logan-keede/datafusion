@@ -25,6 +25,7 @@ use arrow::datatypes::SchemaRef;
 use async_trait::async_trait;
 use datafusion_common::Result;
 use datafusion_common::{not_impl_err, Constraints, Statistics};
+use datafusion_datasource::session_file_handler::SessionFileHandler;
 use datafusion_expr::Expr;
 
 use datafusion_expr::dml::InsertOp;
@@ -308,7 +309,7 @@ pub trait TableProviderFactory: Debug + Sync + Send {
     /// Create a TableProvider with the given url
     async fn create(
         &self,
-        state: &dyn Session,
+        state: &dyn SessionFileHandler,
         cmd: &CreateExternalTable,
     ) -> Result<Arc<dyn TableProvider>>;
 }

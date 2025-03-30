@@ -42,6 +42,7 @@ use arrow::datatypes::{DataType, Field, Schema, SchemaRef};
 use arrow::record_batch::RecordBatch;
 use datafusion_catalog::Session;
 use datafusion_common::TableReference;
+use datafusion_datasource::session_file_handler::SessionFileHandler;
 use datafusion_expr::{CreateExternalTable, Expr, SortExpr, TableType};
 
 use async_trait::async_trait;
@@ -173,7 +174,7 @@ pub struct TestTableFactory {}
 impl TableProviderFactory for TestTableFactory {
     async fn create(
         &self,
-        _: &dyn Session,
+        _: &dyn SessionFileHandler,
         cmd: &CreateExternalTable,
     ) -> Result<Arc<dyn TableProvider>> {
         Ok(Arc::new(TestTableProvider {

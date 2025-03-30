@@ -28,6 +28,7 @@ use crate::Session;
 use datafusion_common::{
     Constraints, DFSchema, DataFusionError, HashMap, TableReference,
 };
+use datafusion_datasource::session_file_handler::SessionFileHandler;
 use datafusion_expr::CreateExternalTable;
 
 use async_trait::async_trait;
@@ -88,7 +89,7 @@ impl ListingSchemaProvider {
     }
 
     /// Reload table information from ObjectStore
-    pub async fn refresh(&self, state: &dyn Session) -> datafusion_common::Result<()> {
+    pub async fn refresh(&self, state: &dyn SessionFileHandler) -> datafusion_common::Result<()> {
         let entries: Vec<_> = self.store.list(Some(&self.path)).try_collect().await?;
         let base = Path::new(self.path.as_ref());
         let mut tables = HashSet::new();
