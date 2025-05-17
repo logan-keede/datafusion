@@ -116,7 +116,7 @@ impl RunOpt {
         };
 
         // configure parquet options
-        let mut config = self.common.config();
+        let mut config = self.common.config()?;
         {
             let parquet_options = &mut config.options_mut().execution.parquet;
             // The hits_partitioned dataset specifies string columns
@@ -129,9 +129,9 @@ impl RunOpt {
         self.register_hits(&ctx).await?;
 
         let iterations = self.common.iterations;
-        let mut millis = Vec::with_capacity(iterations);
         let mut benchmark_run = BenchmarkRun::new();
         for query_id in query_range {
+            let mut millis = Vec::with_capacity(iterations);
             benchmark_run.start_new_case(&format!("Query {query_id}"));
             let sql = queries.get_query(query_id)?;
             println!("Q{query_id}: {sql}");

@@ -15,18 +15,23 @@
 // specific language governing permissions and limitations
 // under the License.
 
-use std::{ffi::c_void, sync::Arc};
-
+use crate::{
+    arrow_wrappers::{WrappedArray, WrappedSchema},
+    df_result, rresult, rresult_return,
+    util::{rvec_wrapped_to_vec_datatype, vec_datatype_to_rvec_wrapped},
+    volatility::FFI_Volatility,
+};
 use abi_stable::{
     std_types::{RResult, RString, RVec},
     StableAbi,
 };
-use arrow::datatypes::DataType;
+use arrow::datatypes::{DataType, Field};
 use arrow::{
     array::ArrayRef,
     error::ArrowError,
     ffi::{from_ffi, to_ffi, FFI_ArrowSchema},
 };
+use datafusion::logical_expr::ReturnFieldArgs;
 use datafusion::{
     error::DataFusionError,
     logical_expr::type_coercion::functions::data_types_with_scalar_udf,
@@ -37,13 +42,12 @@ use datafusion::{
         ColumnarValue, ScalarFunctionArgs, ScalarUDF, ScalarUDFImpl, Signature,
     },
 };
-
-use crate::{
-    arrow_wrappers::{WrappedArray, WrappedSchema},
-    df_result, rresult, rresult_return,
-    util::{rvec_wrapped_to_vec_datatype, vec_datatype_to_rvec_wrapped},
-    volatility::FFI_Volatility,
+use return_type_args::{
+    FFI_ReturnFieldArgs, ForeignReturnFieldArgs, ForeignReturnFieldArgsOwned,
 };
+use std::{ffi::c_void, sync::Arc};
+
+pub mod return_type_args;
 
 /// A stable struct for sharing a [`ScalarUDF`] across FFI boundaries.
 #[repr(C)]
@@ -66,13 +70,23 @@ pub struct FFI_ScalarUDF {
         arg_types: RVec<WrappedSchema>,
     ) -> RResult<WrappedSchema, RString>,
 
+    /// Determines the return info of the underlying [`ScalarUDF`]. Either this
+    /// or return_type may be implemented on a UDF.
+    pub return_field_from_args: unsafe extern "C" fn(
+        udf: &Self,
+        args: FFI_ReturnFieldArgs,
+    )
+        -> RResult<WrappedSchema, RString>,
+
     /// Execute the underlying [`ScalarUDF`] and return the result as a `FFI_ArrowArray`
     /// within an AbiStable wrapper.
+    #[allow(clippy::type_complexity)]
     pub invoke_with_args: unsafe extern "C" fn(
         udf: &Self,
         args: RVec<WrappedArray>,
+        arg_fields: RVec<WrappedSchema>,
         num_rows: usize,
-        return_type: WrappedSchema,
+        return_field: WrappedSchema,
     ) -> RResult<WrappedArray, RString>,
 
     /// See [`ScalarUDFImpl`] for details on short_circuits
@@ -123,6 +137,24 @@ unsafe extern "C" fn return_type_fn_wrapper(
     rresult!(return_type)
 }
 
+unsafe extern "C" fn return_field_from_args_fn_wrapper(
+    udf: &FFI_ScalarUDF,
+    args: FFI_ReturnFieldArgs,
+) -> RResult<WrappedSchema, RString> {
+    let private_data = udf.private_data as *const ScalarUDFPrivateData;
+    let udf = &(*private_data).udf;
+
+    let args: ForeignReturnFieldArgsOwned = rresult_return!((&args).try_into());
+    let args_ref: ForeignReturnFieldArgs = (&args).into();
+
+    let return_type = udf
+        .return_field_from_args((&args_ref).into())
+        .and_then(|f| FFI_ArrowSchema::try_from(f).map_err(DataFusionError::from))
+        .map(WrappedSchema);
+
+    rresult!(return_type)
+}
+
 unsafe extern "C" fn coerce_types_fn_wrapper(
     udf: &FFI_ScalarUDF,
     arg_types: RVec<WrappedSchema>,
@@ -140,8 +172,9 @@ unsafe extern "C" fn coerce_types_fn_wrapper(
 unsafe extern "C" fn invoke_with_args_fn_wrapper(
     udf: &FFI_ScalarUDF,
     args: RVec<WrappedArray>,
+    arg_fields: RVec<WrappedSchema>,
     number_rows: usize,
-    return_type: WrappedSchema,
+    return_field: WrappedSchema,
 ) -> RResult<WrappedArray, RString> {
     let private_data = udf.private_data as *const ScalarUDFPrivateData;
     let udf = &(*private_data).udf;
@@ -155,12 +188,20 @@ unsafe extern "C" fn invoke_with_args_fn_wrapper(
         .collect::<std::result::Result<_, _>>();
 
     let args = rresult_return!(args);
-    let return_type = rresult_return!(DataType::try_from(&return_type.0));
+    let return_field = rresult_return!(Field::try_from(&return_field.0));
+
+    let arg_fields_owned = arg_fields
+        .into_iter()
+        .map(|wrapped_field| (&wrapped_field.0).try_into().map_err(DataFusionError::from))
+        .collect::<Result<Vec<Field>>>();
+    let arg_fields_owned = rresult_return!(arg_fields_owned);
+    let arg_fields = arg_fields_owned.iter().collect::<Vec<_>>();
 
     let args = ScalarFunctionArgs {
         args,
+        arg_fields,
         number_rows,
-        return_type: &return_type,
+        return_field: &return_field,
     };
 
     let result = rresult_return!(udf
@@ -209,6 +250,7 @@ impl From<Arc<ScalarUDF>> for FFI_ScalarUDF {
             short_circuits,
             invoke_with_args: invoke_with_args_fn_wrapper,
             return_type: return_type_fn_wrapper,
+            return_field_from_args: return_field_from_args_fn_wrapper,
             coerce_types: coerce_types_fn_wrapper,
             clone: clone_fn_wrapper,
             release: release_fn_wrapper,
@@ -281,11 +323,22 @@ impl ScalarUDFImpl for ForeignScalarUDF {
         result.and_then(|r| (&r.0).try_into().map_err(DataFusionError::from))
     }
 
+    fn return_field_from_args(&self, args: ReturnFieldArgs) -> Result<Field> {
+        let args: FFI_ReturnFieldArgs = args.try_into()?;
+
+        let result = unsafe { (self.udf.return_field_from_args)(&self.udf, args) };
+
+        let result = df_result!(result);
+
+        result.and_then(|r| (&r.0).try_into().map_err(DataFusionError::from))
+    }
+
     fn invoke_with_args(&self, invoke_args: ScalarFunctionArgs) -> Result<ColumnarValue> {
         let ScalarFunctionArgs {
             args,
+            arg_fields,
             number_rows,
-            return_type,
+            return_field,
         } = invoke_args;
 
         let args = args
@@ -302,10 +355,26 @@ impl ScalarUDFImpl for ForeignScalarUDF {
             .collect::<std::result::Result<Vec<_>, ArrowError>>()?
             .into();
 
-        let return_type = WrappedSchema(FFI_ArrowSchema::try_from(return_type)?);
+        let arg_fields_wrapped = arg_fields
+            .iter()
+            .map(|field| FFI_ArrowSchema::try_from(*field))
+            .collect::<std::result::Result<Vec<_>, ArrowError>>()?;
+
+        let arg_fields = arg_fields_wrapped
+            .into_iter()
+            .map(WrappedSchema)
+            .collect::<RVec<_>>();
+
+        let return_field = WrappedSchema(FFI_ArrowSchema::try_from(return_field)?);
 
         let result = unsafe {
-            (self.udf.invoke_with_args)(&self.udf, args, number_rows, return_type)
+            (self.udf.invoke_with_args)(
+                &self.udf,
+                args,
+                arg_fields,
+                number_rows,
+                return_field,
+            )
         };
 
         let result = df_result!(result)?;
@@ -344,7 +413,7 @@ mod tests {
 
         let foreign_udf: ForeignScalarUDF = (&local_udf).try_into()?;
 
-        assert!(original_udf.name() == foreign_udf.name());
+        assert_eq!(original_udf.name(), foreign_udf.name());
 
         Ok(())
     }

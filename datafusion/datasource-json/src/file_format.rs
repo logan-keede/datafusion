@@ -44,7 +44,7 @@ use datafusion_datasource::file_compression_type::FileCompressionType;
 use datafusion_datasource::file_format::{
     FileFormat, FileFormatFactory, DEFAULT_SCHEMA_INFER_MAX_RECORD,
 };
-use datafusion_datasource::file_scan_config::FileScanConfig;
+use datafusion_datasource::file_scan_config::{FileScanConfig, FileScanConfigBuilder};
 use datafusion_datasource::file_sink_config::{FileSink, FileSinkConfig};
 use datafusion_datasource::sink::{DataSink, DataSinkExec};
 use datafusion_datasource::write::demux::DemuxedStreamReceiver;
@@ -52,13 +52,13 @@ use datafusion_datasource::write::orchestration::spawn_writer_tasks_and_join;
 use datafusion_datasource::write::BatchSerializer;
 use datafusion_execution::{SendableRecordBatchStream, TaskContext};
 use datafusion_expr::dml::InsertOp;
-use datafusion_physical_expr::PhysicalExpr;
 use datafusion_physical_expr_common::sort_expr::LexRequirement;
 use datafusion_physical_plan::{DisplayAs, DisplayFormatType, ExecutionPlan};
 use datafusion_session::Session;
 
 use async_trait::async_trait;
 use bytes::{Buf, Bytes};
+use datafusion_datasource::source::DataSourceExec;
 use object_store::{GetResultPayload, ObjectMeta, ObjectStore};
 
 #[derive(Default)]
@@ -208,6 +208,7 @@ impl FileFormat for JsonFormat {
 
             let r = store.as_ref().get(&object.location).await?;
             let schema = match r.payload {
+                #[cfg(not(target_arch = "wasm32"))]
                 GetResultPayload::File(file, _) => {
                     let decoder = file_compression_type.convert_read(file)?;
                     let mut reader = BufReader::new(decoder);
@@ -246,12 +247,16 @@ impl FileFormat for JsonFormat {
     async fn create_physical_plan(
         &self,
         _state: &dyn Session,
-        mut conf: FileScanConfig,
-        _filters: Option<&Arc<dyn PhysicalExpr>>,
+        conf: FileScanConfig,
     ) -> Result<Arc<dyn ExecutionPlan>> {
         let source = Arc::new(JsonSource::new());
-        conf.file_compression_type = FileCompressionType::from(self.options.compression);
-        Ok(conf.with_source(source).build())
+        let conf = FileScanConfigBuilder::from(conf)
+            .with_file_compression_type(FileCompressionType::from(
+                self.options.compression,
+            ))
+            .with_source(source)
+            .build();
+        Ok(DataSourceExec::from_data_source(conf))
     }
 
     async fn create_writer_physical_plan(

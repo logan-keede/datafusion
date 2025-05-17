@@ -5079,7 +5079,7 @@ async fn write_partitioned_parquet_results() -> Result<()> {
         .await?;
 
     // Explicitly read the parquet file at c2=123 to verify the physical files are partitioned
-    let partitioned_file = format!("{out_dir}/c2=123", out_dir = out_dir);
+    let partitioned_file = format!("{out_dir}/c2=123");
     let filter_df = ctx
         .read_parquet(&partitioned_file, ParquetReadOptions::default())
         .await?;
@@ -5204,6 +5204,40 @@ fn union_fields() -> UnionFields {
     ]
     .into_iter()
     .collect()
+}
+
+#[tokio::test]
+async fn union_literal_is_null_and_not_null() -> Result<()> {
+    let str_array_1 = StringArray::from(vec![None::<String>]);
+    let str_array_2 = StringArray::from(vec![Some("a")]);
+
+    let batch_1 =
+        RecordBatch::try_from_iter(vec![("arr", Arc::new(str_array_1) as ArrayRef)])?;
+    let batch_2 =
+        RecordBatch::try_from_iter(vec![("arr", Arc::new(str_array_2) as ArrayRef)])?;
+
+    let ctx = SessionContext::new();
+    ctx.register_batch("union_batch_1", batch_1)?;
+    ctx.register_batch("union_batch_2", batch_2)?;
+
+    let df1 = ctx.table("union_batch_1").await?;
+    let df2 = ctx.table("union_batch_2").await?;
+
+    let batches = df1.union(df2)?.collect().await?;
+    let schema = batches[0].schema();
+
+    for batch in batches {
+        // Verify schema is the same for all batches
+        if !schema.contains(&batch.schema()) {
+            return Err(DataFusionError::Internal(format!(
+                "Schema mismatch. Previously had\n{:#?}\n\nGot:\n{:#?}",
+                &schema,
+                batch.schema()
+            )));
+        }
+    }
+
+    Ok(())
 }
 
 #[tokio::test]
@@ -5475,6 +5509,64 @@ async fn boolean_dictionary_as_filter() {
     +----------------+
     "###
     );
+}
+
+#[tokio::test]
+async fn test_union_by_name() -> Result<()> {
+    let df = create_test_table("test")
+        .await?
+        .select(vec![col("a"), col("b"), lit(1).alias("c")])?
+        .alias("table_alias")?;
+
+    let df2 = df.clone().select_columns(&["c", "b", "a"])?;
+    let result = df.union_by_name(df2)?.sort_by(vec![col("a"), col("b")])?;
+
+    assert_snapshot!(
+        batches_to_sort_string(&result.collect().await?),
+        @r"
+    +-----------+-----+---+
+    | a         | b   | c |
+    +-----------+-----+---+
+    | 123AbcDef | 100 | 1 |
+    | 123AbcDef | 100 | 1 |
+    | CBAdef    | 10  | 1 |
+    | CBAdef    | 10  | 1 |
+    | abc123    | 10  | 1 |
+    | abc123    | 10  | 1 |
+    | abcDEF    | 1   | 1 |
+    | abcDEF    | 1   | 1 |
+    +-----------+-----+---+
+    "
+    );
+    Ok(())
+}
+
+#[tokio::test]
+async fn test_union_by_name_distinct() -> Result<()> {
+    let df = create_test_table("test")
+        .await?
+        .select(vec![col("a"), col("b"), lit(1).alias("c")])?
+        .alias("table_alias")?;
+
+    let df2 = df.clone().select_columns(&["c", "b", "a"])?;
+    let result = df
+        .union_by_name_distinct(df2)?
+        .sort_by(vec![col("a"), col("b")])?;
+
+    assert_snapshot!(
+        batches_to_sort_string(&result.collect().await?),
+        @r"
+    +-----------+-----+---+
+    | a         | b   | c |
+    +-----------+-----+---+
+    | 123AbcDef | 100 | 1 |
+    | CBAdef    | 10  | 1 |
+    | abc123    | 10  | 1 |
+    | abcDEF    | 1   | 1 |
+    +-----------+-----+---+
+    "
+    );
+    Ok(())
 }
 
 #[tokio::test]
