@@ -45,5 +45,19 @@ jobs:
         uses: actions-rust-lang/setup-rust-toolchain@v1
       - name: Install semver-checks
         run: cargo install cargo-semver-checks --locked
-      - name: Run semver-check
-        run: cargo semver-checks check-release
+      - name: Run semver-check datasource
+        run: cargo semver-checks check-release -p datafusion-datasource -p datafusion-datasource-avro -p datafusion-datasource-csv -p datafusion-datasource-json -p datafusion-datasource-parquet
+      - name: Run semver-check common
+        run: cargo semver-checks check-release -p datafusion-common datafusion-common-runtime
+      - name: Run semver-check catalog
+        run: cargo semver-checks check-release -p datafusion-catalog datafusion-catalog-listing
+      - name: Run semver-check execution
+        run: cargo semver-checks check-release -p datafusion-execution
+      - name: Run semver-check expr
+        run: cargo semver-checks check-release  -p datafusion-expr -p datafusion-expr-common -p datafusion-physical-expr
+      - name : Run semver-check functions
+        run: cargo semver-checks check-release -p datafusion-functions -p datafusion-functions-aggregate -p datafusion-functions-aggregate-common -p datafusion-functions-nested -p datafusion-functions-table -p datafusion-functions-window -p datafusion-functions-window-common
+      - name: Run semver-check macros
+        run: cargo semver-checks check-release -p datafusion-macros
+      - name: Run semver-check optimizer
+        run: cargo semver-checks check-release -p datafusion-optimizer -p datafusion-physicl-optimizer
