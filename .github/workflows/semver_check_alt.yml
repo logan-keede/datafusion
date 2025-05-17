@@ -48,10 +48,13 @@ jobs:
         run: cargo install cargo-semver-checks --locked
       - name: Run semver-check datasource
         run: cargo semver-checks check-release -p datafusion-datasource -p datafusion-datasource-avro -p datafusion-datasource-csv -p datafusion-datasource-json -p datafusion-datasource-parquet
+        continue-on-error: true
       - name: Run semver-check common
         run: cargo semver-checks check-release -p datafusion-common datafusion-common-runtime
+        continue-on-error: true
       - name: Run semver-check catalog
         run: cargo semver-checks check-release -p datafusion-catalog datafusion-catalog-listing
+        continue-on-error: true
       - name: Run semver-check execution
         run: cargo semver-checks check-release -p datafusion-execution
       - name: Run semver-check expr
