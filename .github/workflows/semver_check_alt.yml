@@ -96,4 +96,12 @@ jobs:
       - name: Run semver-check spark
         run: cargo semver-checks check-release -p datafusion-spark
         continue-on-error: true
-      - name: 
+      - name: Run semver-check sqllogictest
+        run: cargo semver-checks check-release -p datafusion-sqllogictest
+        continue-on-error: true
+      - name: Run semver-check datafusion-cli
+        run: cargo semver-checks check-release -p datafusion-cli
+        continue-on-error: true
+      - name: Run semver-check datafusion
+        run: cargo semver-checks check-release -p datafusion
+        continue-on-error: true
