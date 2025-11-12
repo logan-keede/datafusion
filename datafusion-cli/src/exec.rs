@@ -327,7 +327,7 @@ impl StatementExecutor {
 
         let plan = create_plan(ctx, self.statement, false).await?;
         let adjusted = adjusted.with_plan(&plan);
-
+        println!("{}", plan.display_indent());
         let df = match ctx.execute_logical_plan(plan).await {
             Ok(df) => Ok(df),
             Err(DataFusionError::ObjectStore(err))

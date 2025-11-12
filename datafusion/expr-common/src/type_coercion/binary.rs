@@ -1288,9 +1288,9 @@ fn numerical_coercion(lhs_type: &DataType, rhs_type: &DataType) -> Option<DataTy
         // integral types, we choose the narrowest possible integral type that
         // accommodates all values of both types. Note that to avoid information
         // loss when combining UInt64 with signed integers we use Decimal128(20, 0).
-        (UInt64, Int64 | Int32 | Int16 | Int8)
-        | (Int64 | Int32 | Int16 | Int8, UInt64) => Some(Decimal128(20, 0)),
-        (UInt64, _) | (_, UInt64) => Some(UInt64),
+        // (UInt64, Int64 | Int32 | Int16 | Int8)
+        // | (Int64 | Int32 | Int16 | Int8, UInt64) => Some(Decimal128(20, 0)),
+        // (UInt64, _) | (_, UInt64) => Some(UInt64),
         (Int64, _)
         | (_, Int64)
         | (UInt32, Int32 | Int16 | Int8)

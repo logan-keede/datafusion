@@ -23,6 +23,7 @@ use datafusion_common::Result;
 use datafusion_expr::expr_rewriter::coerce_plan_expr_for_schema;
 use datafusion_expr::{Distinct, LogicalPlan, Union};
 use itertools::Itertools;
+use log::debug;
 use std::sync::Arc;
 
 #[derive(Default, Debug)]
@@ -54,6 +55,7 @@ impl OptimizerRule for EliminateNestedUnion {
         plan: LogicalPlan,
         _config: &dyn OptimizerConfig,
     ) -> Result<Transformed<LogicalPlan>> {
+        println!("{}", plan.display_indent());
         match plan {
             LogicalPlan::Union(Union { inputs, schema }) => {
                 let inputs = inputs
@@ -61,7 +63,7 @@ impl OptimizerRule for EliminateNestedUnion {
                     .flat_map(extract_plans_from_union)
                     .map(|plan| coerce_plan_expr_for_schema(plan, &schema))
                     .collect::<Result<Vec<_>>>()?;
-
+                // println!("{}", LogicalPlan::Union(Union {inputs:inputs.clone().into_iter().map(Arc::new).collect_vec(), schema: schema.clone() }).display_indent());
                 Ok(Transformed::yes(LogicalPlan::Union(Union {
                     inputs: inputs.into_iter().map(Arc::new).collect_vec(),
                     schema,
@@ -92,6 +94,7 @@ impl OptimizerRule for EliminateNestedUnion {
             _ => Ok(Transformed::no(plan)),
         }
     }
+    
 }
 
 fn extract_plans_from_union(plan: Arc<LogicalPlan>) -> Vec<LogicalPlan> {
